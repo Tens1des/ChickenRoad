@@ -96,6 +96,7 @@ private struct SideButtonsBar: View {
 
             MenuImageButton(imageName: "AchivButton", action: onAchievements)
                 .frame(width: sideButtonSize, height: sideButtonSize)
+                .offset(y: -sideButtonSize * 0.10)
         }
         .padding(.bottom, sideButtonsLift)
     }
