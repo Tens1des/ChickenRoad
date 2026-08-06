@@ -9,13 +9,13 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        MainMenuView(
+            coins: 1250,
+            onPlay: { /* TODO: переход в игру */ },
+            onShop: { /* TODO: открыть магазин */ },
+            onAchievements: { /* TODO: открыть достижения */ },
+            onSettings: { /* TODO: открыть настройки */ }
+        )
     }
 }
 
