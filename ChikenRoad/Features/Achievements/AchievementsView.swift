@@ -5,28 +5,6 @@
 
 import SwiftUI
 
-private enum AppPalette {
-    static let titleTop = Color(red: 1.0, green: 0.86, blue: 0.45)
-    static let titleBottom = Color(red: 0.98, green: 0.62, blue: 0.12)
-    static let titleShadow = Color(red: 0.45, green: 0.28, blue: 0.08)
-
-    static let tabTop = Color(red: 0.58, green: 0.34, blue: 0.14)
-    static let tabBottom = Color(red: 0.42, green: 0.24, blue: 0.08)
-
-    static let cardTop = Color(red: 0.86, green: 0.62, blue: 0.34)
-    static let cardMid = Color(red: 0.78, green: 0.48, blue: 0.22)
-    static let cardBottom = Color(red: 0.62, green: 0.36, blue: 0.14)
-
-    static let borderLight = Color(red: 0.98, green: 0.86, blue: 0.45)
-    static let borderDark = Color(red: 0.72, green: 0.48, blue: 0.14)
-
-    static let accentTop = Color(red: 1.0, green: 0.96, blue: 0.42)
-    static let accentBottom = Color(red: 1.0, green: 0.78, blue: 0.12)
-
-    static let slotTop = Color(red: 0.52, green: 0.32, blue: 0.14)
-    static let slotBottom = Color(red: 0.38, green: 0.22, blue: 0.08)
-}
-
 struct AchievementsView: View {
     var progress: GameProgress
     var onBack: () -> Void = {}
@@ -70,12 +48,12 @@ struct AchievementsView: View {
         let coinsPanelWidth = topButtonSize * 2.35
 
         return HStack(alignment: .center, spacing: 12) {
-            AchievementsCoinsPanelView(amount: progress.coins, height: topButtonSize)
+            CoinsPanelView(amount: progress.coins, height: topButtonSize)
                 .frame(width: coinsPanelWidth)
 
             Spacer(minLength: 0)
 
-            AchievementsImageButton(imageName: "SettingsButton", action: onBack)
+            ImageButton(imageName: "SettingsButton", action: onBack)
                 .frame(width: backButtonSize, height: backButtonSize)
         }
         .frame(maxWidth: .infinity)
@@ -260,94 +238,6 @@ private struct AchievementTabShape: Shape {
         path.closeSubpath()
 
         return path
-    }
-}
-
-private struct AchievementsCoinsPanelView: View {
-    let amount: Int
-    let height: CGFloat
-
-    private var cornerRadius: CGFloat { height * 0.3 }
-
-    private var formattedAmount: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = " "
-        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
-    }
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image("IconMoney")
-                .resizable()
-                .scaledToFit()
-                .frame(width: height * 0.82, height: height * 0.82)
-                .offset(x: -2)
-
-            Text(formattedAmount)
-                .font(.system(size: height * 0.44, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-                .shadow(color: Color(red: 0.28, green: 0.12, blue: 0.04), radius: 0, x: 0, y: 2)
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-
-            Spacer(minLength: 0)
-        }
-        .padding(.leading, 6)
-        .padding(.trailing, 10)
-        .frame(height: height)
-        .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.78, green: 0.18, blue: 0.1),
-                                Color(red: 0.58, green: 0.1, blue: 0.06)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.98, green: 0.86, blue: 0.45),
-                                Color(red: 0.72, green: 0.48, blue: 0.14)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: height * 0.07
-                    )
-            }
-            .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
-        }
-    }
-}
-
-private struct AchievementsImageButton: View {
-    let imageName: String
-    let action: () -> Void
-
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: action) {
-            Image(imageName)
-                .resizable()
-                .scaledToFit()
-                .scaleEffect(isPressed ? 0.94 : 1)
-                .animation(.easeOut(duration: 0.12), value: isPressed)
-        }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
     }
 }
 

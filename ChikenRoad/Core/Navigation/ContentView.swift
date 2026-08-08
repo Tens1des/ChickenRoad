@@ -2,17 +2,8 @@
 //  ContentView.swift
 //  ChikenRoad
 //
-//  Created by dad on 06.08.2026.
-//
 
 import SwiftUI
-
-private enum AppScreen {
-    case mainMenu
-    case shop
-    case achievements
-    case settings
-}
 
 struct ContentView: View {
     @State private var screen: AppScreen = .mainMenu
@@ -24,10 +15,26 @@ struct ContentView: View {
             case .mainMenu:
                 MainMenuView(
                     coins: progress.coins,
-                    onPlay: { /* TODO: переход в игру */ },
+                    onPlay: { screen = .levels },
                     onShop: { screen = .shop },
                     onAchievements: { screen = .achievements },
                     onSettings: { screen = .settings }
+                )
+                .transition(.opacity)
+
+            case .levels:
+                LevelsView(
+                    progress: progress,
+                    onBack: { screen = .mainMenu },
+                    onSelectLevel: { level in screen = .game(level: level) }
+                )
+                .transition(.opacity)
+
+            case .game(let level):
+                GameView(
+                    level: level,
+                    progress: progress,
+                    onExit: { screen = .levels }
                 )
                 .transition(.opacity)
 
@@ -47,7 +54,7 @@ struct ContentView: View {
 
             case .settings:
                 SettingsView(onBack: { screen = .mainMenu })
-                    .transition(.opacity)
+                .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: screen)

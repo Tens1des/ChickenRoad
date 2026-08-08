@@ -24,7 +24,7 @@ struct SettingsView: View {
                 HStack {
                     Spacer(minLength: 0)
 
-                    SettingsImageButton(imageName: "SettingsButton", action: onBack)
+                    ImageButton(imageName: "SettingsButton", action: onBack)
                         .frame(
                             width: max(layoutSize.width * 0.17, 52),
                             height: max(layoutSize.width * 0.17, 52)
@@ -88,7 +88,7 @@ private struct SettingsToggleRow: View {
                 .frame(width: labelWidth)
                 .fixedSize(horizontal: false, vertical: true)
 
-            SettingsImageButton(
+            ImageButton(
                 imageName: isOn ? "OnState" : "OffState",
                 action: { isOn.toggle() }
             )
@@ -96,29 +96,6 @@ private struct SettingsToggleRow: View {
             .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-private struct SettingsImageButton: View {
-    let imageName: String
-    let action: () -> Void
-
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: action) {
-            Image(imageName)
-                .resizable()
-                .scaledToFit()
-                .scaleEffect(isPressed ? 0.94 : 1)
-                .animation(.easeOut(duration: 0.12), value: isPressed)
-        }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
     }
 }
 
