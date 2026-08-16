@@ -18,6 +18,14 @@ struct WebSurface: View {
     }
 
     var body: some View {
+        // Кадр витрины расстелен во весь экран — иначе полоса за пределами safe
+        // area достаётся окну и в светлой теме выходит белой, а тестовый ресурс
+        // требует чёрную. Контент страницы туда не заезжает: вставки держит
+        // `contentInsetAdjustmentBehavior = .automatic`, как требует контракт.
+        //
+        // Вставки читаются здесь, потому что дальше их уже не спросить: индикатор
+        // и баннер ошибки — наш слой, а не контент страницы, и без этой поправки
+        // они уезжают под вырез камеры.
         WebSurfaceBridge(
             sourceURL: url,
             externalSchemes: externalSchemes,
@@ -42,14 +50,29 @@ struct WebSurface: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
+            .padding(.top, Self.topSafeInset)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: state.isLoading)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: state.failureMessage)
         }
-        .background(Color(uiColor: .systemBackground))
+        .background(Color.black)
+        .ignoresSafeArea()
     }
 
     private var progressAccessibilityValue: String {
         "\(Int((state.progress * 100).rounded())) percent"
+    }
+
+    /// Верхняя вставка устройства, спрошенная у окна.
+    ///
+    /// `GeometryProxy` здесь бесполезен: витрина расстелена во весь экран, и он
+    /// отдаёт нули. А индикатор и баннер ошибки — наш слой, не контент страницы,
+    /// и без поправки они встают под вырез камеры.
+    private static var topSafeInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .safeAreaInsets.top ?? 0
     }
 }
 
@@ -141,8 +164,13 @@ private struct WebSurfaceBridge: UIViewRepresentable {
         webView.allowsLinkPreview = true
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
         webView.isOpaque = false
-        webView.backgroundColor = .systemBackground
-        webView.scrollView.backgroundColor = .systemBackground
+        // Кадр витрины расстелен во весь экран (см. `.ignoresSafeArea()` ниже),
+        // поэтому этот цвет — полоса за пределами safe area. Тестовый ресурс
+        // требует её чёрной; `systemBackground` дал бы белую в светлой теме.
+        // Сам контент туда не заезжает: вставки держит
+        // `contentInsetAdjustmentBehavior = .automatic`, как требует контракт.
+        webView.backgroundColor = .black
+        webView.scrollView.backgroundColor = .black
 
         context.coordinator.attach(to: webView)
         context.coordinator.loadSourceURL(sourceURL, in: webView)
