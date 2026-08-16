@@ -6,14 +6,88 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		88C1D00000000000000000D0 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 88C1D00000000000000000C2 /* FirebaseCore */; };
+		88C1D00000000000000000D1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 88C1D00000000000000000C3 /* FirebaseMessaging */; };
+		88C1D00000000000000000D2 /* AppsFlyerLib-Static in Frameworks */ = {isa = PBXBuildFile; productRef = 88C1D00000000000000000C4 /* AppsFlyerLib-Static */; };
+		88C1D00000000000000000D3 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 88C1D00000000000000000C5 /* FirebaseMessaging */; };
+		88C1D00000000000000000D4 /* RichPushService.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 88C1D00000000000000000A1 /* RichPushService.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		88AA010630251F1B003E8477 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 880E4C6230251F1B003E8477 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 880E4C6930251F1B003E8477;
+			remoteInfo = ChikenRoad;
+		};
+		88C1D00000000000000000A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 880E4C6230251F1B003E8477 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 88C1D00000000000000000A3;
+			remoteInfo = RichPushService;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		88C1D00000000000000000A7 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				88C1D00000000000000000D4 /* RichPushService.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		880E4C6A30251F1B003E8477 /* ChikenRoad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChikenRoad.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		88AA010030251F1B003E8477 /* ChikenRoadShellTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChikenRoadShellTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		88C1D00000000000000000A1 /* RichPushService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RichPushService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		88C1D00000000000000000AA /* Exceptions for "ChikenRoad" folder in "ChikenRoad" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 880E4C6930251F1B003E8477 /* ChikenRoad */;
+		};
+		88C1D00000000000000000AB /* Exceptions for "RichPushService" folder in "RichPushService" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 88C1D00000000000000000A3 /* RichPushService */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		880E4C6C30251F1B003E8477 /* ChikenRoad */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				88C1D00000000000000000AA /* Exceptions for "ChikenRoad" folder in "ChikenRoad" target */,
+			);
 			path = ChikenRoad;
+			sourceTree = "<group>";
+		};
+		88AA010130251F1B003E8477 /* ChikenRoadShellTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ChikenRoadShellTests;
+			sourceTree = "<group>";
+		};
+		88C1D00000000000000000A2 /* RichPushService */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				88C1D00000000000000000AB /* Exceptions for "RichPushService" folder in "RichPushService" target */,
+			);
+			path = RichPushService;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +97,24 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				88C1D00000000000000000D0 /* FirebaseCore in Frameworks */,
+				88C1D00000000000000000D1 /* FirebaseMessaging in Frameworks */,
+				88C1D00000000000000000D2 /* AppsFlyerLib-Static in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		88AA010430251F1B003E8477 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		88C1D00000000000000000A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				88C1D00000000000000000D3 /* FirebaseMessaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +125,8 @@
 			isa = PBXGroup;
 			children = (
 				880E4C6C30251F1B003E8477 /* ChikenRoad */,
+				88C1D00000000000000000A2 /* RichPushService */,
+				88AA010130251F1B003E8477 /* ChikenRoadShellTests */,
 				880E4C6B30251F1B003E8477 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +135,8 @@
 			isa = PBXGroup;
 			children = (
 				880E4C6A30251F1B003E8477 /* ChikenRoad.app */,
+				88C1D00000000000000000A1 /* RichPushService.appex */,
+				88AA010030251F1B003E8477 /* ChikenRoadShellTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,20 +151,71 @@
 				880E4C6630251F1B003E8477 /* Sources */,
 				880E4C6730251F1B003E8477 /* Frameworks */,
 				880E4C6830251F1B003E8477 /* Resources */,
+				88C1D00000000000000000A7 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				88C1D00000000000000000A9 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				880E4C6C30251F1B003E8477 /* ChikenRoad */,
 			);
 			name = ChikenRoad;
 			packageProductDependencies = (
+				88C1D00000000000000000C2 /* FirebaseCore */,
+				88C1D00000000000000000C3 /* FirebaseMessaging */,
+				88C1D00000000000000000C4 /* AppsFlyerLib-Static */,
 			);
 			productName = ChikenRoad;
 			productReference = 880E4C6A30251F1B003E8477 /* ChikenRoad.app */;
 			productType = "com.apple.product-type.application";
+		};
+		88AA010230251F1B003E8477 /* ChikenRoadShellTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 88AA010830251F1B003E8477 /* Build configuration list for PBXNativeTarget "ChikenRoadShellTests" */;
+			buildPhases = (
+				88AA010330251F1B003E8477 /* Sources */,
+				88AA010430251F1B003E8477 /* Frameworks */,
+				88AA010530251F1B003E8477 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				88AA010730251F1B003E8477 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				88AA010130251F1B003E8477 /* ChikenRoadShellTests */,
+			);
+			name = ChikenRoadShellTests;
+			packageProductDependencies = (
+			);
+			productName = ChikenRoadShellTests;
+			productReference = 88AA010030251F1B003E8477 /* ChikenRoadShellTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		88C1D00000000000000000A3 /* RichPushService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 88C1D00000000000000000B0 /* Build configuration list for PBXNativeTarget "RichPushService" */;
+			buildPhases = (
+				88C1D00000000000000000A4 /* Sources */,
+				88C1D00000000000000000A5 /* Frameworks */,
+				88C1D00000000000000000A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				88C1D00000000000000000A2 /* RichPushService */,
+			);
+			name = RichPushService;
+			packageProductDependencies = (
+				88C1D00000000000000000C5 /* FirebaseMessaging */,
+			);
+			productName = RichPushService;
+			productReference = 88C1D00000000000000000A1 /* RichPushService.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -83,6 +230,12 @@
 					880E4C6930251F1B003E8477 = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					88AA010230251F1B003E8477 = {
+						TestTargetID = 880E4C6930251F1B003E8477;
+					};
+					88C1D00000000000000000A3 = {
+						CreatedOnToolsVersion = 26.6;
+					};
 				};
 			};
 			buildConfigurationList = 880E4C6530251F1B003E8477 /* Build configuration list for PBXProject "ChikenRoad" */;
@@ -94,18 +247,38 @@
 			);
 			mainGroup = 880E4C6130251F1B003E8477;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				88C1D00000000000000000C0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				88C1D00000000000000000C1 /* XCRemoteSwiftPackageReference "AppsFlyerFramework-Static" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 880E4C6B30251F1B003E8477 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				880E4C6930251F1B003E8477 /* ChikenRoad */,
+				88C1D00000000000000000A3 /* RichPushService */,
+				88AA010230251F1B003E8477 /* ChikenRoadShellTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		880E4C6830251F1B003E8477 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		88AA010530251F1B003E8477 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		88C1D00000000000000000A6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +295,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		88AA010330251F1B003E8477 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		88C1D00000000000000000A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		88AA010730251F1B003E8477 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 880E4C6930251F1B003E8477 /* ChikenRoad */;
+			targetProxy = 88AA010630251F1B003E8477 /* PBXContainerItemProxy */;
+		};
+		88C1D00000000000000000A9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 88C1D00000000000000000A3 /* RichPushService */;
+			targetProxy = 88C1D00000000000000000A8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		880E4C7330251F1C003E8477 /* Debug */ = {
@@ -242,25 +442,17 @@
 		880E4C7630251F1C003E8477 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ChikenRoad/ChikenRoad.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Hen Path";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ChikenRoad/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -286,25 +478,17 @@
 		880E4C7730251F1C003E8477 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ChikenRoad/ChikenRoad.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Hen Path";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ChikenRoad/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -324,6 +508,104 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		88AA010930251F1B003E8477 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.henpath.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChikenRoad.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChikenRoad";
+			};
+			name = Debug;
+		};
+		88AA010A30251F1B003E8477 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.henpath.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ChikenRoad.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ChikenRoad";
+			};
+			name = Release;
+		};
+		88C1D00000000000000000B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RichPushService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.henpath.app.RichPushService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		88C1D00000000000000000B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RichPushService/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.henpath.app.RichPushService;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -348,7 +630,67 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		88AA010830251F1B003E8477 /* Build configuration list for PBXNativeTarget "ChikenRoadShellTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				88AA010930251F1B003E8477 /* Debug */,
+				88AA010A30251F1B003E8477 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		88C1D00000000000000000B0 /* Build configuration list for PBXNativeTarget "RichPushService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				88C1D00000000000000000B1 /* Debug */,
+				88C1D00000000000000000B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		88C1D00000000000000000C0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.17.0;
+			};
+		};
+		88C1D00000000000000000C1 /* XCRemoteSwiftPackageReference "AppsFlyerFramework-Static" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AppsFlyerSDK/AppsFlyerFramework-Static";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		88C1D00000000000000000C2 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 88C1D00000000000000000C0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		88C1D00000000000000000C3 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 88C1D00000000000000000C0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		88C1D00000000000000000C4 /* AppsFlyerLib-Static */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 88C1D00000000000000000C1 /* XCRemoteSwiftPackageReference "AppsFlyerFramework-Static" */;
+			productName = "AppsFlyerLib-Static";
+		};
+		88C1D00000000000000000C5 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 88C1D00000000000000000C0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 880E4C6230251F1B003E8477 /* Project object */;
 }

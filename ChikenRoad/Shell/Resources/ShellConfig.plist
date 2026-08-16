@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>LinkEndpoint</key>
+	<string>https://henpath.com/config.php</string>
+	<key>AttributionDevKey</key>
+	<string>JyfWx3fJM484XCxP4Wv8mK</string>
+	<key>AppleAppID</key>
+	<string>6800238447</string>
+	<key>StoreID</key>
+	<string>id6800238447</string>
+	<key>PrivacyPolicyURL</key>
+	<string>https://henpath.com/privacy-policy.html</string>
+	<key>AllowedExternalSchemes</key>
+	<array>
+		<string>mailto</string>
+		<string>tel</string>
+		<string>sms</string>
+		<string>itms-apps</string>
+	</array>
+</dict>
+</plist>
