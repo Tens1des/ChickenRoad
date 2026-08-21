@@ -71,7 +71,6 @@ enum PreviewCatalog {
             OfflineSurface(onRetry: {})
         case .consent, .consentLandscape:
             ConsentSurface(
-                privacyPolicyURL: AppShellFacade.shared.privacyPolicyURL,
                 onAccept: {},
                 onSkip: {}
             )
@@ -123,10 +122,10 @@ private struct ForcedLandscapeCanvas<Content: View>: View {
 }
 
 #Preview("Consent · Portrait") {
-    ConsentSurface(privacyPolicyURL: nil, onAccept: {}, onSkip: {})
+    ConsentSurface(onAccept: {}, onSkip: {})
 }
 
 #Preview("Consent · Landscape", traits: .landscapeLeft) {
-    ConsentSurface(privacyPolicyURL: nil, onAccept: {}, onSkip: {})
+    ConsentSurface(onAccept: {}, onSkip: {})
 }
 #endif

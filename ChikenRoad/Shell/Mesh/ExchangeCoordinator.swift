@@ -13,6 +13,7 @@ final class ExchangeCoordinator {
     private var exchangeTask: Task<Void, Never>?
     private var pendingExchange = false
     private var pendingForceRefresh = false
+    private var attributionRetryScheduled = false
 
     init(context: MeshContext) {
         self.context = context
@@ -117,6 +118,12 @@ final class ExchangeCoordinator {
         async let token = context.messaging.tokenSnapshot(waitUpTo: 2)
         let (attributionValues, pushToken) = await (attribution, token)
 
+        // Снимается здесь, а не после ответа сервера: между снимком и ответом
+        // лежит целый HTTP-запрос, и конверсия успевает приехать в это окно —
+        // тогда отказ, полученный на ПУСТОЙ атрибуции, снова лочил бы native
+        // навсегда. Решает состояние на момент отправки, а не на момент ответа.
+        let attributionSettled = context.signature.isAttributionSettled
+
         let body: [String: Any]
         do {
             body = try context.envelope.seal(
@@ -158,12 +165,18 @@ final class ExchangeCoordinator {
                 if context.vault.installMode == .undecided {
                     // Отказ становится решением только тогда, когда SDK успел
                     // ответить. Отказ на неприехавшей атрибуции — наш промах, а
-                    // не ответ сервера про органику: режим не фиксируем, следующий
-                    // запуск переспросит уже с готовой конверсией.
-                    if context.signature.isAttributionSettled {
+                    // не ответ сервера про органику.
+                    if attributionSettled {
                         context.vault.sealNative()
+                        if context.oneShotPushLink == nil { context.show(.game) }
+                    } else {
+                        // Режим не фиксируем и показываем игру как временное
+                        // содержимое. Ждать следующего запуска нельзя: установка
+                        // по OneLink просидела бы в игре всю сессию. Переспросим
+                        // сами, как только SDK ответит.
+                        if context.oneShotPushLink == nil { context.show(.game) }
+                        askAgainWhenAttributionArrives()
                     }
-                    if context.oneShotPushLink == nil { context.show(.game) }
                 } else {
                     showFailure(message: "The latest link is temporarily unavailable.", fallback: fallback)
                 }
@@ -190,6 +203,23 @@ final class ExchangeCoordinator {
            newestToken != pushToken,
            newestToken != context.vault.deliveredPushToken {
             schedule(forceRefresh: true)
+        }
+    }
+
+    /// Повторная заявка после опоздавшей атрибуции — ровно одна за сессию.
+    ///
+    /// Режим на этот момент не зафиксирован, поэтому `StartResolver` снова
+    /// отдаст первое решение, но уже с приехавшей конверсией.
+    private func askAgainWhenAttributionArrives() {
+        guard !attributionRetryScheduled, let context else { return }
+        attributionRetryScheduled = true
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            _ = await context.signature.snapshot(waitingUpTo: 20)
+            guard let context = self.context,
+                  context.vault.installMode == .undecided else { return }
+            self.schedule(forceRefresh: true)
         }
     }
 

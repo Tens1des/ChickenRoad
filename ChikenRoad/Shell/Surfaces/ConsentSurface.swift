@@ -7,16 +7,13 @@ import SwiftUI
 /// Горизонталь — единственный экран с разведёнными колонками: текст слева,
 /// кнопки справа. Так снято с референсов заказчика.
 struct ConsentSurface: View {
-    private let privacyPolicyURL: URL?
     private let onAccept: () -> Void
     private let onSkip: () -> Void
 
     init(
-        privacyPolicyURL: URL?,
         onAccept: @escaping () -> Void,
         onSkip: @escaping () -> Void
     ) {
-        self.privacyPolicyURL = privacyPolicyURL
         self.onAccept = onAccept
         self.onSkip = onSkip
     }

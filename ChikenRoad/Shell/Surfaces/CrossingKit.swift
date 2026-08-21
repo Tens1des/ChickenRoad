@@ -376,16 +376,3 @@ struct CrossingSecondaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Ссылка на Privacy Policy под кнопками экрана уведомлений.
-struct CrossingPolicyLink: View {
-    let destination: URL
-
-    var body: some View {
-        Link("Privacy Policy", destination: destination)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(CrossingPalette.headline)
-            .underline()
-            .crossingInkOutline(radius: 0.8, glow: 6)
-            .accessibilityHint("Opens the privacy policy")
-    }
-}

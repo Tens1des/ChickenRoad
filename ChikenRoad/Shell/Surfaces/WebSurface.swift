@@ -68,26 +68,30 @@ struct WebSurface: View {
 
 @MainActor
 private final class WebSurfaceState: ObservableObject {
-    @Published fileprivate var progress = 0.0
-    @Published fileprivate var isLoading = true
+    /// Единственное, что рисует витрина поверх страницы, — баннер ошибки.
+    /// Прогресса и признака загрузки здесь намеренно нет: полосу индикатора
+    /// убрали по просьбе заказчика, а держать ради неё KVO за `estimatedProgress`
+    /// значит дёргать наблюдателя на каждом такте загрузки впустую.
     @Published fileprivate var failureMessage: String?
 
     fileprivate var retryHandler: (() -> Void)?
 
+    /// Пустой вызов не публикует изменение намеренно: `beginLoading()` зовётся в
+    /// том числе из `makeUIView`/`updateUIView`, то есть прямо во время прохода
+    /// отрисовки. Мутировать там `@Published` — ровно тот случай, на который
+    /// SwiftUI ругается «Publishing changes from within view updates».
     fileprivate func beginLoading() {
+        guard failureMessage != nil else { return }
         failureMessage = nil
-        isLoading = true
-        progress = 0
     }
 
     fileprivate func finishLoading() {
-        progress = 1
-        isLoading = false
+        guard failureMessage != nil else { return }
         failureMessage = nil
     }
 
     fileprivate func showFailure(_ message: String) {
-        isLoading = false
+        guard failureMessage != message else { return }
         failureMessage = message
     }
 
@@ -186,7 +190,6 @@ private struct WebSurfaceBridge: UIViewRepresentable {
 
         private let state: WebSurfaceState
         private weak var webView: WKWebView?
-        private var progressObservation: NSKeyValueObservation?
         private var lastAttemptedURL: URL?
         /// Бюджет автоповторов после `httpTooManyRedirects`.
         ///
@@ -211,30 +214,15 @@ private struct WebSurfaceBridge: UIViewRepresentable {
             self.externalSchemes = externalSchemes
         }
 
-        deinit {
-            progressObservation?.invalidate()
-        }
-
         fileprivate func attach(to webView: WKWebView) {
             self.webView = webView
             state.retryHandler = { [weak self] in
                 self?.retryAfterVisibleFailure()
             }
 
-            progressObservation = webView.observe(
-                \.estimatedProgress,
-                options: [.initial, .new]
-            ) { [weak state] _, change in
-                guard let progress = change.newValue else { return }
-                Task { @MainActor in
-                    state?.progress = min(max(progress, 0), 1)
-                }
-            }
         }
 
         fileprivate func detach(from webView: WKWebView) {
-            progressObservation?.invalidate()
-            progressObservation = nil
             state.retryHandler = nil
             webView.navigationDelegate = nil
             webView.uiDelegate = nil
@@ -282,7 +270,6 @@ private struct WebSurfaceBridge: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation?) {
             state.failureMessage = nil
-            state.isLoading = true
         }
 
         func webView(

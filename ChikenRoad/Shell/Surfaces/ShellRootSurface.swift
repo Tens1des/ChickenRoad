@@ -24,7 +24,6 @@ struct ShellRootSurface<GameContent: View>: View {
 
             case .consent:
                 ConsentSurface(
-                    privacyPolicyURL: shell.privacyPolicyURL,
                     onAccept: shell.acceptConsent,
                     onSkip: shell.skipConsent
                 )
