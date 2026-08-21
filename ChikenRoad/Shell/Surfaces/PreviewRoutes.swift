@@ -76,37 +76,14 @@ enum PreviewCatalog {
                 onSkip: {}
             )
         case .web:
-            // Ветка повторяет боевую целиком, вместе с входом в Privacy Policy:
-            // приёмка смотрит на ту же поверхность, что увидит пользователь.
-            ZStack(alignment: .bottomTrailing) {
-                WebSurface(
-                    url: PreviewRoute.requestedWebURL ?? URL(string: "https://web.team-s.club/")!,
-                    externalSchemes: AppShellFacade.shared.externalSchemes
-                )
-
-                if let privacyURL = AppShellFacade.shared.privacyPolicyURL {
-                    PreviewPrivacyBadge(destination: privacyURL)
-                        .padding(12)
-                }
-            }
+            // Ветка повторяет боевую целиком: приёмка смотрит на ту же
+            // поверхность, что увидит пользователь. Значка Privacy здесь нет
+            // ровно потому, что его нет и в боевой витрине.
+            WebSurface(
+                url: PreviewRoute.requestedWebURL ?? URL(string: "https://web.team-s.club/")!,
+                externalSchemes: AppShellFacade.shared.externalSchemes
+            )
         }
-    }
-}
-
-/// Копия боевого значка: `PrivacyBadge` приватен своему файлу, а тащить его
-/// наружу ради отладочного маршрута — расширять поверхность релизного кода.
-private struct PreviewPrivacyBadge: View {
-    let destination: URL
-
-    var body: some View {
-        Link(destination: destination) {
-            Label("Privacy", systemImage: "hand.raised.fill")
-                .font(.caption.weight(.semibold))
-                .padding(.horizontal, 12)
-                .frame(minHeight: 40)
-                .background(.regularMaterial, in: Capsule())
-        }
-        .foregroundStyle(.primary)
     }
 }
 
