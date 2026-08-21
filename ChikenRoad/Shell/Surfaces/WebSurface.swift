@@ -18,61 +18,51 @@ struct WebSurface: View {
     }
 
     var body: some View {
-        // Кадр витрины расстелен во весь экран — иначе полоса за пределами safe
-        // area достаётся окну и в светлой теме выходит белой, а тестовый ресурс
-        // требует чёрную. Контент страницы туда не заезжает: вставки держит
-        // `contentInsetAdjustmentBehavior = .automatic`, как требует контракт.
-        //
-        // Вставки читаются здесь, потому что дальше их уже не спросить: индикатор
-        // и баннер ошибки — наш слой, а не контент страницы, и без этой поправки
-        // они уезжают под вырез камеры.
-        WebSurfaceBridge(
-            sourceURL: url,
-            externalSchemes: externalSchemes,
-            state: state
-        )
-        .overlay(alignment: .top) {
-            VStack(spacing: 10) {
-                if state.isLoading {
-                    ProgressView(value: state.progress)
-                        .progressViewStyle(.linear)
-                        .tint(Color.accentColor)
-                        .accessibilityLabel("Loading webpage")
-                        .accessibilityValue(progressAccessibilityValue)
-                }
+        // Кадр витрины стоит в safe area: этого требует ТЗ («в пределах Safe
+        // Area в любой ориентации») и так же устроен эталон, где у веб-контейнера
+        // `.ignoresSafeArea()` нет вовсе. Полноэкранный кадр был компромиссом
+        // ради чёрной полосы — теперь полосу красит фон ЗА кадром, и компромисс
+        // снят. В альбоме на телефоне верхняя вставка и так нулевая, поэтому
+        // отпускать верх отдельно не нужно: это пустышка в норме и заводит
+        // витрину под баннер звонка тогда, когда вставка не нулевая.
+        ZStack(alignment: .top) {
+            WebSurfaceBridge(
+                sourceURL: url,
+                externalSchemes: externalSchemes,
+                state: state
+            )
 
-                if let failureMessage = state.failureMessage {
-                    WebFailureStrip(
-                        message: failureMessage,
-                        onRetry: state.retry
-                    )
-                    .padding(.horizontal, 12)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-            }
-            .padding(.top, Self.topSafeInset)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: state.isLoading)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: state.failureMessage)
+            statusOverlay
         }
-        .background(Color.black)
-        .ignoresSafeArea()
+        // Клавиатуру поднимает сам WKWebView: он знает про сфокусированное поле
+        // и скроллит его над клавиатурой. Если её же отработает SwiftUI, сжав
+        // кадр, компенсация случится дважды и форма уедет вверх.
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        // Чёрное живёт строго ЗА кадром витрины: полоса под статус-баром и под
+        // полосой жестов обязана быть чёрной, системный фон дал бы белую.
+        .background {
+            Color.black.ignoresSafeArea()
+        }
     }
 
-    private var progressAccessibilityValue: String {
-        "\(Int((state.progress * 100).rounded())) percent"
-    }
-
-    /// Верхняя вставка устройства, спрошенная у окна.
+    /// Баннер ошибки — наш слой, а не контент страницы. Лежит в стеке, который
+    /// уважает safe area, поэтому вставку не надо спрашивать у окна руками.
     ///
-    /// `GeometryProxy` здесь бесполезен: витрина расстелена во весь экран, и он
-    /// отдаёт нули. А индикатор и баннер ошибки — наш слой, не контент страницы,
-    /// и без поправки они встают под вырез камеры.
-    private static var topSafeInset: CGFloat {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first { $0.isKeyWindow }?
-            .safeAreaInsets.top ?? 0
+    /// Индикатора загрузки здесь намеренно нет: заказчик просил убрать полосу,
+    /// возникавшую поверх страницы на каждом переходе.
+    @ViewBuilder
+    private var statusOverlay: some View {
+        VStack(spacing: 10) {
+            if let failureMessage = state.failureMessage {
+                WebFailureStrip(
+                    message: failureMessage,
+                    onRetry: state.retry
+                )
+                .padding(.horizontal, 12)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.22), value: state.failureMessage)
     }
 }
 
@@ -164,11 +154,11 @@ private struct WebSurfaceBridge: UIViewRepresentable {
         webView.allowsLinkPreview = true
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
         webView.isOpaque = false
-        // Кадр витрины расстелен во весь экран (см. `.ignoresSafeArea()` ниже),
-        // поэтому этот цвет — полоса за пределами safe area. Тестовый ресурс
-        // требует её чёрной; `systemBackground` дал бы белую в светлой теме.
-        // Сам контент туда не заезжает: вставки держит
-        // `contentInsetAdjustmentBehavior = .automatic`, как требует контракт.
+        // Кадр витрины стоит в safe area, поэтому этот цвет — не полоса за её
+        // пределами (её красит `Color.black` в `body`), а фон под самой
+        // страницей: он виден до первой отрисовки и при rubber-band.
+        // `contentInsetAdjustmentBehavior = .automatic` остаётся по контракту и
+        // при таком кадре резолвится в ноль — вставок для него больше нет.
         webView.backgroundColor = .black
         webView.scrollView.backgroundColor = .black
 
@@ -198,7 +188,23 @@ private struct WebSurfaceBridge: UIViewRepresentable {
         private weak var webView: WKWebView?
         private var progressObservation: NSKeyValueObservation?
         private var lastAttemptedURL: URL?
-        private var redirectRetryAvailable = true
+        /// Бюджет автоповторов после `httpTooManyRedirects`.
+        ///
+        /// У WKWebView свой потолок редиректов на ОДНУ загрузку. Цепочка входа
+        /// тестового ресурса его перебирает, и обход ровно один — перезапустить
+        /// загрузку с последнего увиденного адреса: каждая новая загрузка
+        /// получает свежий лимит, а цепочка продолжается с места обрыва.
+        /// Одной попытки мало. Бюджет всё равно конечен: настоящая петля обязана
+        /// кончиться баннером, а не вечной перезагрузкой.
+        private static let redirectRetryBudget = 8
+        private var redirectRetriesLeft = Pilot.redirectRetryBudget
+        /// Адрес, с которого стартовал прошлый автоповтор. Если цепочка
+        /// оборвалась на нём же — она стоит на месте, повторять больше нечего.
+        private var lastRedirectRetryURL: URL?
+        /// Повтор уже запланирован. `-1007` приходит и из
+        /// `didFailProvisionalNavigation`, и из `didFail`; без этого флага один
+        /// обрыв съедал бы две единицы бюджета и стартовал две загрузки.
+        private var redirectRetryScheduled = false
 
         init(state: WebSurfaceState, externalSchemes: Set<String>) {
             self.state = state
@@ -238,7 +244,7 @@ private struct WebSurfaceBridge: UIViewRepresentable {
         fileprivate func loadSourceURL(_ url: URL, in webView: WKWebView) {
             sourceURL = url
             lastAttemptedURL = url
-            redirectRetryAvailable = true
+            resetRedirectRetryBudget()
             state.beginLoading()
             webView.load(URLRequest(url: url))
         }
@@ -296,7 +302,7 @@ private struct WebSurfaceBridge: UIViewRepresentable {
             if let finalURL = webView.url {
                 lastAttemptedURL = finalURL
             }
-            redirectRetryAvailable = true
+            resetRedirectRetryBudget()
             state.finishLoading()
         }
 
@@ -317,6 +323,8 @@ private struct WebSurfaceBridge: UIViewRepresentable {
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            // Процесс контента упал — дальше загрузка с нуля, бюджет полон.
+            resetRedirectRetryBudget()
             state.beginLoading()
             if webView.url != nil {
                 webView.reload()
@@ -375,7 +383,7 @@ private struct WebSurfaceBridge: UIViewRepresentable {
 
         private func beginExplicitNavigation(to url: URL) {
             lastAttemptedURL = url
-            redirectRetryAvailable = true
+            resetRedirectRetryBudget()
         }
 
         private func openExternally(_ url: URL) {
@@ -399,22 +407,48 @@ private struct WebSurfaceBridge: UIViewRepresentable {
             state.showFailure(message(for: nsError))
         }
 
-        /// Ровно один автоповтор последнего адреса, дальше — баннер.
+        /// Дожимает цепочку сама: каждая новая загрузка с последнего адреса
+        /// получает свежий лимит редиректов. Пользователь в этом не участвует.
         private func retryAfterRedirectLoop(in webView: WKWebView) {
-            guard redirectRetryAvailable, let lastAttemptedURL else {
+            guard let target = lastAttemptedURL, redirectRetriesLeft > 0 else {
                 state.showFailure("The page redirected too many times.")
                 return
             }
 
-            redirectRetryAvailable = false
+            // Оборвались на том же адресе, с которого сами и перезапустились, —
+            // цепочка не двигается. Это настоящая петля, а не длинный вход.
+            guard target != lastRedirectRetryURL else {
+                state.showFailure("The page redirected too many times.")
+                return
+            }
+
+            guard !redirectRetryScheduled else { return }
+
+            redirectRetryScheduled = true
+            redirectRetriesLeft -= 1
+            lastRedirectRetryURL = target
             state.beginLoading()
-            webView.load(URLRequest(url: lastAttemptedURL))
+
+            // Следующим тактом, а не изнутри делегата ошибки: загрузку,
+            // начатую синхронно в колбэке об ошибке, WebKit может отбросить.
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.redirectRetryScheduled = false
+                guard self.webView === webView else { return }
+                webView.load(URLRequest(url: target))
+            }
+        }
+
+        private func resetRedirectRetryBudget() {
+            redirectRetriesLeft = Pilot.redirectRetryBudget
+            lastRedirectRetryURL = nil
+            redirectRetryScheduled = false
         }
 
         private func retryAfterVisibleFailure() {
             guard let webView else { return }
 
-            redirectRetryAvailable = true
+            resetRedirectRetryBudget()
             state.beginLoading()
 
             if let lastAttemptedURL {

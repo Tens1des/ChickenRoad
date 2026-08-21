@@ -12,7 +12,14 @@ enum ShellOrientationPolicy {
     static let gameOrientations: UIInterfaceOrientationMask = .portrait
 
     /// Шесть кастомных экранов и витрина рисуются в обеих ориентациях.
-    static let surfaceOrientations: UIInterfaceOrientationMask = .all
+    ///
+    /// Ровно три положения: 0°, 90° и 270° — их и проверяет тестовый ресурс.
+    /// `.all` добавляла к ним 180°, и слой честно вставал вверх ногами: на
+    /// телефоне этого никто не ждёт, а лишний переход между масками — лишний
+    /// шанс поймать зависание на повороте.
+    static let surfaceOrientations: UIInterfaceOrientationMask = [
+        .portrait, .landscapeLeft, .landscapeRight
+    ]
 
     static func mask(
         for destination: ShellDestination,

@@ -132,7 +132,14 @@ final class InstallSignature: NSObject, @unchecked Sendable {
         guard isInitialized else { return false }
         guard damper.shouldForward(url, source: .scene) else { return true }
 #if canImport(AppsFlyerLib)
-        AppsFlyerLib.shared().handleUniversalLink(url)
+        // Универсальная ссылка и кастомная схема — разные входы SDK. Схему,
+        // отданную в `handleUniversalLink`, AppsFlyer не резолвит, и диплинк
+        // теряется вместе с атрибуцией.
+        if let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" {
+            AppsFlyerLib.shared().handleUniversalLink(url)
+        } else {
+            AppsFlyerLib.shared().handleOpen(url, options: [:])
+        }
 #endif
         return true
     }
@@ -156,6 +163,11 @@ final class InstallSignature: NSObject, @unchecked Sendable {
         await ledger.snapshot(waitingUpTo: max(0, timeout))
     }
 
+    /// Пришли ли уже оба колбэка SDK. Нужно, чтобы отличить «атрибуция сказала
+    /// Organic» от «атрибуция не успела»: во втором случае отказ сервера — наш
+    /// промах, и фиксировать по нему режим навсегда нельзя.
+    var isAttributionSettled: Bool { ledger.isSettled }
+
     private func ensureInitialized() throws {
         guard isInitialized else { throw InstallSignatureError.notInitialized }
     }
@@ -171,7 +183,7 @@ final class InstallSignature: NSObject, @unchecked Sendable {
 #if canImport(AppsFlyerLib)
 extension InstallSignature: AppsFlyerLibDelegate {
     func onConversionDataSuccess(_ conversionInfo: [AnyHashable: Any]) {
-        ledger.merge(conversionInfo)
+        ledger.mergeConversion(conversionInfo)
         ledger.markConversionSettled()
     }
 
@@ -185,7 +197,7 @@ extension InstallSignature: AppsFlyerDeepLinkDelegate {
         switch result.status {
         case .found:
             if let clickEvent = result.deepLink?.clickEvent {
-                ledger.merge(clickEvent)
+                ledger.mergeClickEvent(clickEvent)
             }
             ledger.markDeepLinkSettled()
         case .failure, .notFound:
@@ -236,19 +248,32 @@ private final class DeliveryDamper: @unchecked Sendable {
 /// Обратный порядок затирал бы UDL-данные, которые приходят вторыми.
 private final class SignatureLedger: @unchecked Sendable {
     private let gate = NSLock()
-    private var values: [String: Any] = [:]
+    /// Ответ конверсии перезаписывается: SDK сначала отдаёт то, что знает, и
+    /// уточняет после матчинга. Первое значение здесь — не правда, а черновик.
+    private var conversion: [String: Any] = [:]
+    /// UDL приходит вторым и обязан побеждать, поэтому здесь первое значение
+    /// и остаётся первым.
+    private var clickEvent: [String: Any] = [:]
     private var conversionSettled = false
     private var deepLinkSettled = false
     private var waiters: [UUID: CheckedContinuation<Void, Never>] = [:]
 
-    func merge(_ fields: [AnyHashable: Any]) {
+    func mergeConversion(_ fields: [AnyHashable: Any]) {
         gate.lock()
         for (key, value) in fields {
-            guard let textKey = Self.textKey(key),
-                  values[textKey] == nil else { continue }
+            guard let textKey = Self.textKey(key) else { continue }
             // Значение SDK не приводится к типу и не выбрасывается: пригодность
             // к JSON проверяется один раз, непосредственно перед запросом.
-            values[textKey] = value
+            conversion[textKey] = value
+        }
+        gate.unlock()
+    }
+
+    func mergeClickEvent(_ fields: [AnyHashable: Any]) {
+        gate.lock()
+        for (key, value) in fields {
+            guard let textKey = Self.textKey(key), clickEvent[textKey] == nil else { continue }
+            clickEvent[textKey] = value
         }
         gate.unlock()
     }
@@ -285,7 +310,7 @@ private final class SignatureLedger: @unchecked Sendable {
         return currentValues()
     }
 
-    private var isSettled: Bool {
+    var isSettled: Bool {
         gate.lock()
         defer { gate.unlock() }
         return conversionSettled && deepLinkSettled
@@ -314,7 +339,9 @@ private final class SignatureLedger: @unchecked Sendable {
     private func currentValues() -> [String: Any] {
         gate.lock()
         defer { gate.unlock() }
-        return values
+        // UDL поверх конверсии — прежний приоритет: диплинк приходит вторым и
+        // обязан побеждать одноимённые поля конверсии.
+        return conversion.merging(clickEvent) { _, deepLink in deepLink }
     }
 
     private static func textKey(_ key: AnyHashable) -> String? {

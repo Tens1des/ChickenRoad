@@ -105,7 +105,15 @@ final class ExchangeCoordinator {
         }
 
         // Атрибуция и токен ждутся параллельно, а не по очереди.
-        async let attribution = context.signature.snapshot(waitingUpTo: 3)
+        //
+        // Первое решение необратимо, поэтому на нём атрибуцию ждут дольше: до
+        // `start()` AppsFlyer держит собственный таймаут на резолв ссылки, и
+        // трёх секунд на весь путь не хватает установке по OneLink — она
+        // уезжает органической. Выше шести не поднимаем: видимая загрузка по ТЗ
+        // ограничена десятью секундами, а следом ещё идёт сам запрос.
+        // Фоновому обновлению с уже зафиксированным режимом ждать незачем.
+        let attributionBudget: TimeInterval = context.vault.installMode == .undecided ? 6 : 3
+        async let attribution = context.signature.snapshot(waitingUpTo: attributionBudget)
         async let token = context.messaging.tokenSnapshot(waitUpTo: 2)
         let (attributionValues, pushToken) = await (attribution, token)
 
@@ -148,7 +156,13 @@ final class ExchangeCoordinator {
                 // Отказ на первом решении — native навсегда. Отказ на уже
                 // залоченном web режим не трогает.
                 if context.vault.installMode == .undecided {
-                    context.vault.sealNative()
+                    // Отказ становится решением только тогда, когда SDK успел
+                    // ответить. Отказ на неприехавшей атрибуции — наш промах, а
+                    // не ответ сервера про органику: режим не фиксируем, следующий
+                    // запуск переспросит уже с готовой конверсией.
+                    if context.signature.isAttributionSettled {
+                        context.vault.sealNative()
+                    }
                     if context.oneShotPushLink == nil { context.show(.game) }
                 } else {
                     showFailure(message: "The latest link is temporarily unavailable.", fallback: fallback)

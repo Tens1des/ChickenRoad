@@ -33,14 +33,10 @@ struct ShellRootSurface<GameContent: View>: View {
                 // Одна ветка на весь web-режим и никакого `.id(url)`: смена
                 // адреса идёт обновлением того же самого webview, иначе теряются
                 // cookies, сессия и скролл.
-                ZStack(alignment: .bottomTrailing) {
-                    WebSurface(url: url, externalSchemes: shell.externalSchemes)
-
-                    if let privacyURL = shell.privacyPolicyURL {
-                        PrivacyBadge(destination: privacyURL)
-                            .padding(12)
-                    }
-                }
+                // Значка Privacy здесь нет намеренно: заказчик просил убрать
+                // его с витрины. В native-ветке он остаётся — там доступ к
+                // политике требует ревью App Store.
+                WebSurface(url: url, externalSchemes: shell.externalSchemes)
 
             case .game:
                 // Privacy Policy обязана быть доступна и в native-режиме. Вход

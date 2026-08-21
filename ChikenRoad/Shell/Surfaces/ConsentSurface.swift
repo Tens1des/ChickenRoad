@@ -47,7 +47,7 @@ struct ConsentSurface: View {
             CrossingHeadline(text: "DON'T MISS YOUR BONUSES")
 
             CrossingBodyText(
-                text: "Turn on notifications for rewards, new levels and special offers. You can change this anytime in Settings."
+                text: "Turn on notifications for rewards, bonuses and special offers. You can change this anytime in Settings."
             )
         }
         .multilineTextAlignment(alignment)
@@ -63,12 +63,6 @@ struct ConsentSurface: View {
             Button("Skip", action: onSkip)
                 .buttonStyle(CrossingSecondaryButtonStyle())
                 .accessibilityHint("Continues without enabling notifications")
-
-            if let privacyPolicyURL {
-                CrossingPolicyLink(destination: privacyPolicyURL)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 2)
-            }
         }
     }
 }

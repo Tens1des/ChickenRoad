@@ -51,6 +51,15 @@ struct LoadingSurface: View {
                 )
                 .padding(size * 0.10)
                 .rotationEffect(.degrees(isAnimating ? 360 : 0))
+                // Вращение объявлено здесь, а не запущено императивно из
+                // `onAppear`. Раскладка меняется на повороте (колонка ↔ строка),
+                // `onAppear` срабатывает заново, и перезапуск `repeatForever`
+                // через `withAnimation` приходился ровно на системный переход
+                // ориентации — экран вставал намертво.
+                .animation(
+                    reduceMotion ? nil : .linear(duration: 1.15).repeatForever(autoreverses: false),
+                    value: isAnimating
+                )
 
             goldenEgg(width: size * 0.30)
                 .scaleEffect(isAnimating && !reduceMotion ? 1.06 : 1)
@@ -93,18 +102,17 @@ struct LoadingSurface: View {
     private func copy(alignment: TextAlignment) -> some View {
         VStack(alignment: alignment == .leading ? .leading : .center, spacing: 8) {
             CrossingHeadline(text: "LOADING...")
-
-            CrossingBodyText(text: "Getting the road ready. This only takes a moment.")
         }
         .multilineTextAlignment(alignment)
         .accessibilityElement(children: .combine)
     }
 
+    /// Только переключает флаг: сами анимации объявлены на элементах и
+    /// подхватывают его сами. Императивный `withAnimation` с `repeatForever`
+    /// отсюда убран намеренно — он перезапускался на каждом повороте.
     private func refreshAnimation() {
-        isAnimating = false
-        guard !reduceMotion else { return }
-        withAnimation(.linear(duration: 1.15).repeatForever(autoreverses: false)) {
-            isAnimating = true
-        }
+        let wanted = !reduceMotion
+        guard isAnimating != wanted else { return }
+        isAnimating = wanted
     }
 }
