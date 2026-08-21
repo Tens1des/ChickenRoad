@@ -46,10 +46,17 @@ enum ShellOrientationPolicy {
     /// игра останется лежать боком до первого поворота устройства.
     @MainActor
     static func refresh() {
-        for scene in UIApplication.shared.connectedScenes {
-            guard let windowScene = scene as? UIWindowScene else { continue }
-            for window in windowScene.windows {
-                window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+        // Следующим тактом, а не изнутри обновления SwiftUI: `onChange`
+        // выполняется внутри транзакции, а запрос геометрии сцены оттуда
+        // повторно входит в раскладку.
+        DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes {
+                guard let windowScene = scene as? UIWindowScene else { continue }
+                // Только наши окна. Клавиатура и текстовые эффекты живут на
+                // своих уровнях, их корни не наши, и маску за них мы не решаем.
+                for window in windowScene.windows where window.windowLevel == .normal {
+                    window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+                }
             }
         }
     }
