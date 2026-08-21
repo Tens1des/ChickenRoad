@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>LinkEndpoint</key>
-	<string>http://192.168.178.76:8788/config</string>
+	<string>https://henpath.com/config.php</string>
 	<key>AttributionDevKey</key>
 	<string>JyfWx3fJM484XCxP4Wv8mK</string>
 	<key>AppleAppID</key>
