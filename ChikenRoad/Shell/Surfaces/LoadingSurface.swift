@@ -5,6 +5,7 @@ import SwiftUI
 /// по содержанию, а не по движению.
 struct LoadingSurface: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @ScaledMetric(relativeTo: .title2) private var scaledIndicatorSize = 96.0
     @State private var isAnimating = false
 
@@ -12,20 +13,27 @@ struct LoadingSurface: View {
 
     var body: some View {
         CrossingScaffold(contentMaxWidth: 480) { layout in
-            if layout.usesSideBySideContent {
-                HStack(spacing: 24) {
-                    indicator
-                    copy(alignment: .leading)
-                }
-            } else {
-                VStack(spacing: 24) {
-                    indicator
-                    copy(alignment: .center)
-                }
+            // Обе раскладки — один и тот же элемент дерева: `AnyLayout` меняет
+            // расстановку, не трогая идентичность. Прежний `if/else` на повороте
+            // подменял ветку, слой ронял `CAAnimation`, и вращение вставало —
+            // навсегда, потому что перезапускать его было некому.
+            let stack = layout.usesSideBySideContent
+                ? AnyLayout(HStackLayout(spacing: 24))
+                : AnyLayout(VStackLayout(spacing: 24))
+
+            stack {
+                indicator
+                copy(alignment: layout.usesSideBySideContent ? .leading : .center)
             }
         }
-        .onAppear(perform: refreshAnimation)
-        .onChange(of: reduceMotion) { _, _ in refreshAnimation() }
+        .onAppear(perform: restartAnimation)
+        .onChange(of: reduceMotion) { _, _ in restartAnimation() }
+        .onChange(of: scenePhase) { _, phase in
+            // Возврат из фона, системный алерт, баннер пуша — любой из них может
+            // снять анимацию со слоя. Страховка на случай, если идентичности
+            // окажется мало.
+            if phase == .active { restartAnimation() }
+        }
     }
 
     /// Золотое яйцо в кольце — знак самой игры, а не системный спиннер.
@@ -107,12 +115,24 @@ struct LoadingSurface: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Только переключает флаг: сами анимации объявлены на элементах и
-    /// подхватывают его сами. Императивный `withAnimation` с `repeatForever`
-    /// отсюда убран намеренно — он перезапускался на каждом повороте.
-    private func refreshAnimation() {
-        let wanted = !reduceMotion
-        guard isAnimating != wanted else { return }
-        isAnimating = wanted
+    /// Перевзводит флаг, а не «включает, если выключено».
+    ///
+    /// Анимации объявлены на самих элементах и подхватывают флаг сами, но
+    /// подхватывают только его ИЗМЕНЕНИЕ. Проверка «уже включено» делала любую
+    /// остановку окончательной: слетевшую со слоя анимацию нечем было вернуть,
+    /// и экран замирал до конца сессии — и кольцо, и пульсация яйца разом,
+    /// потому что флаг у них общий.
+    private func restartAnimation() {
+        guard !reduceMotion else {
+            isAnimating = false
+            return
+        }
+
+        isAnimating = false
+        // Следующим тактом: без смены значения объявленная анимация не
+        // перезапустится, а в одном проходе false и true схлопнутся.
+        DispatchQueue.main.async {
+            isAnimating = true
+        }
     }
 }
