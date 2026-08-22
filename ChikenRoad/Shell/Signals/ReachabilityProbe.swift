@@ -26,6 +26,11 @@ final class ReachabilityProbe: @unchecked Sendable {
     var state: State {
         gate.lock()
         defer { gate.unlock() }
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-ShellForceOffline") {
+            return Self.debugForcedOnlineMarkerPresent ? .online : .offline
+        }
+#endif
         return currentState
     }
 
@@ -40,6 +45,24 @@ final class ReachabilityProbe: @unchecked Sendable {
         running = true
         gate.unlock()
 
+#if DEBUG
+        // Приёмка офлайн-ветки без отключения сети Mac/VPN:
+        //
+        //     -ShellForceOffline
+        //
+        // Пока нет маркера `henpath-online.flag` в temporaryDirectory —
+        // считаем сеть мёртвой. Создание файла + Retry имитирует
+        // «включили интернет и нажали Повторить».
+        if ProcessInfo.processInfo.arguments.contains("-ShellForceOffline") {
+            let forced: State = Self.debugForcedOnlineMarkerPresent ? .online : .offline
+            gate.lock()
+            currentState = forced
+            gate.unlock()
+            if let onChange { Task { @MainActor in onChange(forced) } }
+            return
+        }
+#endif
+
         pathMonitor.pathUpdateHandler = { [weak self] path in
             guard let self else { return }
             let updated: State = path.status == .satisfied ? .online : .offline
@@ -51,6 +74,12 @@ final class ReachabilityProbe: @unchecked Sendable {
         pathMonitor.start(queue: notifyQueue)
     }
 
+#if DEBUG
+    private static var debugForcedOnlineMarkerPresent: Bool {
+        FileManager.default.fileExists(atPath: AcceptanceMarkers.online.path)
+    }
+#endif
+
     func end() {
         pathMonitor.cancel()
         gate.lock()
@@ -61,3 +90,15 @@ final class ReachabilityProbe: @unchecked Sendable {
 
     deinit { pathMonitor.cancel() }
 }
+
+#if DEBUG
+/// Маркеры приёмки в Caches контейнера — видны и приложению, и хосту.
+enum AcceptanceMarkers {
+    private static var caches: URL {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+    }
+
+    static var online: URL { caches.appendingPathComponent("henpath-online.flag") }
+    static var retry: URL { caches.appendingPathComponent("henpath-retry.flag") }
+}
+#endif

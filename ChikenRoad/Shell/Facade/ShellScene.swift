@@ -29,6 +29,16 @@ struct ShellScene<GameContent: View>: View {
     private var liveContent: some View {
         ShellRootSurface(shell: shell, game: game)
             .onOpenURL { url in
+#if DEBUG
+                // Приёмка: симуляция нажатия Retry без Accessibility на хосте.
+                //
+                //     xcrun simctl openurl <udid> 'henpath://qa-retry'
+                if url.scheme?.lowercased() == "henpath",
+                   url.host?.lowercased() == "qa-retry" {
+                    shell.retry()
+                    return
+                }
+#endif
                 shell.handleOpenFromScene(url)
             }
     }

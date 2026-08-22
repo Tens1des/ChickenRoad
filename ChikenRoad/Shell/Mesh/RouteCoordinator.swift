@@ -65,7 +65,27 @@ final class RouteCoordinator: ObservableObject {
         } else {
             context.scheduleExchange(forceRefresh: false)
         }
+
+#if DEBUG
+        armAcceptanceRetryWatcher()
+#endif
     }
+
+#if DEBUG
+    /// Приёмка без Accessibility: маркер в Caches контейнера приложения.
+    private func armAcceptanceRetryWatcher() {
+        Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard let self else { return }
+                let marker = AcceptanceMarkers.retry
+                guard FileManager.default.fileExists(atPath: marker.path) else { continue }
+                try? FileManager.default.removeItem(at: marker)
+                self.retry()
+            }
+        }
+    }
+#endif
 
     func retry() {
         show(.loading)

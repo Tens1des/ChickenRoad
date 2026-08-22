@@ -20,6 +20,14 @@ struct ConsentGate {
     /// Системный отказ закрывает вопрос навсегда: статус перестаёт быть
     /// `notDetermined`, и ни кастомный экран, ни системный больше не всплывают.
     func shouldPrompt(skippedAt: Date?, now: Date = Date()) async -> Bool {
+#if DEBUG
+        // Приёмка: пропуск кастомного экрана уведомлений.
+        //
+        //     -ShellSkipConsent
+        if ProcessInfo.processInfo.arguments.contains("-ShellSkipConsent") {
+            return false
+        }
+#endif
         guard await authorizationStatus() == .notDetermined else { return false }
         guard let skippedAt else { return true }
         return now.timeIntervalSince(skippedAt) >= Self.retryDelay
