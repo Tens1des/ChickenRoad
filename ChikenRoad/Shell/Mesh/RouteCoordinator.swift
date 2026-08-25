@@ -68,12 +68,24 @@ final class RouteCoordinator: ObservableObject {
     }
 
     func retry() {
+        // Связность перечитывается прямо здесь. Иначе кнопка «Retry» на экране
+        // «нет интернета» упирается в закэшированное `offline`: `StartResolver`
+        // сразу возвращает тот же экран, заявка не уходит, и для пользователя
+        // кнопка просто не работает — хотя интернет он уже включил.
+        context?.reachability.refreshNow()
+        resetLoadingDeadline()
         show(.loading)
         armLoadingDeadline()
         context?.scheduleExchange(forceRefresh: false)
     }
 
     func show(_ destination: ShellDestination) {
+        // Ушли с загрузки — часы останавливаются. Иначе взведённый дедлайн
+        // сработает поверх уже показанной витрины.
+        if destination != .loading {
+            loadingDeadlineTask?.cancel()
+            loadingDeadlineTask = nil
+        }
         self.destination = destination
     }
 
@@ -94,19 +106,33 @@ final class RouteCoordinator: ObservableObject {
 
     /// Десять секунд — потолок ТЗ на видимую загрузку.
     func armLoadingDeadline() {
-        loadingDeadlineTask?.cancel()
+        // Десять секунд отсчитываются от момента, когда загрузка ПОЯВИЛАСЬ на
+        // экране, и повторный вызов их не сдвигает. Раньше каждая попытка обмена
+        // перезаряжала таймер, а колбэк связности порождал попытки быстрее, чем
+        // тот успевал сработать, — экран загрузки жил неограниченно долго.
+        guard loadingDeadlineTask == nil else {
+            return
+        }
         loadingDeadlineTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 10_000_000_000)
             guard !Task.isCancelled,
                   let self,
                   let context = self.context,
                   self.destination == .loading,
-                  context.vault.installMode != .native else { return }
+                  context.vault.installMode != .native else {
+                return
+            }
 
             // Колбэк связности или ответ сервиса могут прийти и позже. Дедлайн
             // гарантирует только одно: анимированная заглушка не висит на экране
             // дольше десяти секунд. Режим он не лочит.
             self.show(.offline)
         }
+    }
+
+    /// Явный сброс потолка: пользователь начал заново.
+    func resetLoadingDeadline() {
+        loadingDeadlineTask?.cancel()
+        loadingDeadlineTask = nil
     }
 }

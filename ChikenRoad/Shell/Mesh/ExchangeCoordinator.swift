@@ -99,9 +99,18 @@ final class ExchangeCoordinator {
             return
         }
 
+        // Экран переключается в загрузку только когда загрузка и так на экране:
+        // первый запуск и явный Retry приходят сюда уже с `.loading`. Фоновые
+        // поводы — смена токена, колбэк связности, переспрос после опоздавшей
+        // атрибуции — работают ТИХО, как это уже делает витрина при обновлении.
+        //
+        // Иначе на реальном устройстве выходила вечная загрузка: path updates
+        // сыплются часто, каждый прогонял обмен заново, а тот прибивал экран
+        // обратно в `.loading` и перезаряжал десятисекундный дедлайн — экран
+        // ошибки не успевал ни показаться, ни быть прочитанным.
         if context.oneShotPushLink == nil,
+           context.destination == .loading,
            !context.keepsVisibleWebDuringRefresh(fallback: fallback) {
-            context.show(.loading)
             context.armLoadingDeadline()
         }
 
@@ -113,7 +122,11 @@ final class ExchangeCoordinator {
         // уезжает органической. Выше шести не поднимаем: видимая загрузка по ТЗ
         // ограничена десятью секундами, а следом ещё идёт сам запрос.
         // Фоновому обновлению с уже зафиксированным режимом ждать незачем.
-        let attributionBudget: TimeInterval = context.vault.installMode == .undecided ? 6 : 3
+        // Сумма ожиданий обязана влезать в десятисекундный потолок видимой
+        // загрузки: 3 с на атрибуцию плюс 6 с транспорта = 9 с. Шесть секунд,
+        // как было, давали 12 и гарантировали мелькание экрана ошибки.
+        // Опоздавшую атрибуцию подбирает переспрос, а не длинное ожидание.
+        let attributionBudget: TimeInterval = 3
         async let attribution = context.signature.snapshot(waitingUpTo: attributionBudget)
         async let token = context.messaging.tokenSnapshot(waitUpTo: 2)
         let (attributionValues, pushToken) = await (attribution, token)
@@ -250,10 +263,18 @@ final class ExchangeCoordinator {
             return
         }
 
-        if context.reachability.state == .offline || message.hasPrefix("No internet") {
-            context.show(.offline)
-        } else {
-            context.show(.recoverableFailure(message))
+        // Ошибка сменяет только служебный экран. Тихий фоновый обмен, идущий
+        // под игрой, при неудаче не смахивает её в баннер ошибки: пользователь
+        // ничего не запускал и никакой ошибки не ждёт.
+        switch context.destination {
+        case .loading, .offline, .recoverableFailure:
+            if context.reachability.state == .offline || message.hasPrefix("No internet") {
+                context.show(.offline)
+            } else {
+                context.show(.recoverableFailure(message))
+            }
+        default:
+            break
         }
     }
 

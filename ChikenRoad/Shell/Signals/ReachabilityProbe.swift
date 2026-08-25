@@ -44,11 +44,31 @@ final class ReachabilityProbe: @unchecked Sendable {
             guard let self else { return }
             let updated: State = path.status == .satisfied ? .online : .offline
             self.gate.lock()
+            let changed = self.currentState != updated
             self.currentState = updated
             self.gate.unlock()
+            // Только на смену состояния. `NWPathMonitor` присылает обновление на
+            // любое шевеление пути — смену интерфейса, VPN, дрожание сети, — и
+            // каждое такое `online -> online` запускало новый полный обмен.
+            // Первый колбэк проходит всегда: состояние стартует с `.checking`.
+            guard changed else { return }
             if let onChange { Task { @MainActor in onChange(updated) } }
         }
         pathMonitor.start(queue: notifyQueue)
+    }
+
+    /// Перечитать путь прямо сейчас, не дожидаясь колбэка.
+    ///
+    /// `NWPathMonitor` присылает обновление сам, но не мгновенно и не всегда:
+    /// после возврата сети состояние может ещё какое-то время оставаться
+    /// `offline`. Для фонового цикла это неважно, а для явного «Retry» —
+    /// решающе: пользователь уже включил интернет и ждёт, что кнопка сработает.
+    func refreshNow() {
+        guard running else { return }
+        let updated: State = pathMonitor.currentPath.status == .satisfied ? .online : .offline
+        gate.lock()
+        currentState = updated
+        gate.unlock()
     }
 
     func end() {
