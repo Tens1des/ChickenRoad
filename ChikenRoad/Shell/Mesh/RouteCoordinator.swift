@@ -65,7 +65,27 @@ final class RouteCoordinator: ObservableObject {
         } else {
             context.scheduleExchange(forceRefresh: false)
         }
+
+#if DEBUG
+        armAcceptanceRetryWatcher()
+#endif
     }
+
+#if DEBUG
+    /// Приёмка без Accessibility: маркер в Caches контейнера приложения.
+    private func armAcceptanceRetryWatcher() {
+        Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard let self else { return }
+                let marker = AcceptanceMarkers.retry
+                guard FileManager.default.fileExists(atPath: marker.path) else { continue }
+                try? FileManager.default.removeItem(at: marker)
+                self.retry()
+            }
+        }
+    }
+#endif
 
     func retry() {
         // Связность перечитывается прямо здесь. Иначе кнопка «Retry» на экране
@@ -80,12 +100,20 @@ final class RouteCoordinator: ObservableObject {
     }
 
     func show(_ destination: ShellDestination) {
+        if destination == .loading {
+            self.destination = destination
+            // Идемпотентно: если часы уже идут, второй вызов их не сдвигает.
+            // Нужно потому, что в загрузку можно вернуться и мимо `start()` —
+            // например из ветки ожидания связности, — и тогда экран оставался
+            // бы без потолка вовсе.
+            armLoadingDeadline()
+            return
+        }
+
         // Ушли с загрузки — часы останавливаются. Иначе взведённый дедлайн
         // сработает поверх уже показанной витрины.
-        if destination != .loading {
-            loadingDeadlineTask?.cancel()
-            loadingDeadlineTask = nil
-        }
+        loadingDeadlineTask?.cancel()
+        loadingDeadlineTask = nil
         self.destination = destination
     }
 
