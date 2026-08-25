@@ -44,6 +44,8 @@
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 	</dict>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Allows us to keep the offers and bonuses you see relevant to you.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access lets you upload a photo when a website asks for one.</string>
 	<key>NSMicrophoneUsageDescription</key>

@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(AppTrackingTransparency)
+import AppTrackingTransparency
+#endif
 import OSLog
 import UIKit
 #if canImport(AppsFlyerLib)
@@ -83,12 +86,62 @@ final class InstallSignature: NSObject, @unchecked Sendable {
 #if canImport(AppsFlyerLib)
         AppsFlyerLib.shared().registerSessionReadyListener {
             onReady?()
-            if startAutomatically {
-                AppsFlyerLib.shared().start()
-            }
+            guard startAutomatically else { return }
+            Self.authorizeTrackingThenStart()
         }
 #endif
     }
+
+#if canImport(AppsFlyerLib)
+    /// Спросить ATT и только потом отдать сессию.
+    ///
+    /// Без этого IDFA обнулён, и `advertising_id` из трекинговой ссылки не с чем
+    /// склеить — установка приезжает органической, сколько ни жди конверсию.
+    /// ATT не входит в условия готовности сессии, поэтому спрашиваем здесь, в
+    /// самом листенере, а не в `didFinishLaunching`.
+    private static func authorizeTrackingThenStart() {
+        let gate = NSLock()
+        var launched = false
+        let launch: @Sendable () -> Void = {
+            gate.lock()
+            let first = !launched
+            launched = true
+            gate.unlock()
+            if first { AppsFlyerLib.shared().start() }
+        }
+
+#if canImport(AppTrackingTransparency)
+        if #available(iOS 14.5, *) {
+            // Диалог показывается только активному приложению: на `.inactive`
+            // запрос молча вернёт `.notDetermined`, и IDFA не появится.
+            whenActive {
+                ATTrackingManager.requestTrackingAuthorization { _ in launch() }
+            }
+            // Потолок: сессия обязана уйти, даже если диалога не случилось
+            // вовсе — иначе атрибуции не будет совсем.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 12) { launch() }
+            return
+        }
+#endif
+        launch()
+    }
+
+    private static func whenActive(_ work: @escaping @Sendable () -> Void) {
+        if UIApplication.shared.applicationState == .active {
+            work()
+            return
+        }
+        var token: NSObjectProtocol?
+        token = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            if let token { NotificationCenter.default.removeObserver(token) }
+            work()
+        }
+    }
+#endif
 
     func start() throws {
         try ensureInitialized()

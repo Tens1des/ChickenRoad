@@ -1,4 +1,5 @@
 import Combine
+import UIKit
 import Foundation
 
 /// Узел экрана: что показано, в каком порядке стартует слой и сколько ждёт
@@ -142,7 +143,16 @@ final class RouteCoordinator: ObservableObject {
             return
         }
         loadingDeadlineTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            // Часы идут только пока приложение активно. Системный диалог — ATT,
+            // разрешение на уведомления — уводит его в `.inactive`, и без этой
+            // паузы потолок досчитывался бы прямо под диалогом: пользователь
+            // закрывал бы его уже поверх экрана «нет интернета».
+            var left: TimeInterval = 10
+            while left > 0, !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard UIApplication.shared.applicationState == .active else { continue }
+                left -= 0.25
+            }
             guard !Task.isCancelled,
                   let self,
                   let context = self.context,
