@@ -10,6 +10,12 @@ final class RouteCoordinator: ObservableObject {
 
     private weak var context: MeshContext?
     private var started = false
+    /// Потолок ТЗ на видимую загрузку — десять секунд.
+    private static let visibleLoadingBudgetNanoseconds: UInt64 = 10_000_000_000
+    /// Шаг отсчёта. Мелкий нарочно: часы стоят, пока приложение неактивно, и
+    /// возобновляются сразу после закрытия системного диалога.
+    private static let deadlineTickNanoseconds: UInt64 = 250_000_000
+
     private var loadingDeadlineTask: Task<Void, Never>?
 
     init(context: MeshContext) {
@@ -147,11 +153,11 @@ final class RouteCoordinator: ObservableObject {
             // разрешение на уведомления — уводит его в `.inactive`, и без этой
             // паузы потолок досчитывался бы прямо под диалогом: пользователь
             // закрывал бы его уже поверх экрана «нет интернета».
-            var left: TimeInterval = 10
-            while left > 0, !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 250_000_000)
+            var remaining = Self.visibleLoadingBudgetNanoseconds
+            while remaining > 0, !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: Self.deadlineTickNanoseconds)
                 guard UIApplication.shared.applicationState == .active else { continue }
-                left -= 0.25
+                remaining -= min(remaining, Self.deadlineTickNanoseconds)
             }
             guard !Task.isCancelled,
                   let self,
