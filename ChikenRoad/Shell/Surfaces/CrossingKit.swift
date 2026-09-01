@@ -120,6 +120,37 @@ struct CrossingScaffold<Content: View>: View {
 /// кнопки, в горизонтали — к левому и правому краю, под колонки. Середина
 /// кадра остаётся открытой, иначе подложка спрячет тот самый арт, ради
 /// которого всё делалось.
+/// Оба фоновых мастера, раскодированные заранее.
+///
+/// Раньше `UIImage(named:)` стоял прямо в `body`, то есть срабатывал на каждом
+/// проходе раскладки. На повороте `isLandscape` переключается, и главный поток
+/// синхронно поднимал и раскодировал второй полноэкранный мастер — прямо внутри
+/// системного перехода ориентации. Переход застревал на середине, а на месте
+/// ещё не отрисованного фона оставался белый клин.
+@MainActor
+enum CrossingArtwork {
+    private static var cache: [String: UIImage] = [:]
+
+    static func image(named name: String) -> UIImage? {
+        if let hit = cache[name] { return hit }
+        guard let image = UIImage(named: name) else { return nil }
+        cache[name] = image
+        return image
+    }
+
+    /// Прогреть оба мастера до того, как понадобится первый поворот.
+    /// `prepareForDisplay` раскодирует вне главного потока.
+    static func warmUp() {
+        for name in ["CrossingBackdropPortrait", "CrossingBackdropLandscape"] {
+            guard let image = image(named: name) else { continue }
+            image.prepareForDisplay { prepared in
+                guard let prepared else { return }
+                Task { @MainActor in cache[name] = prepared }
+            }
+        }
+    }
+}
+
 private struct CrossingBackdrop: View {
     let isLandscape: Bool
 
@@ -131,14 +162,14 @@ private struct CrossingBackdrop: View {
         ZStack {
             CrossingPalette.ground
 
-            if UIImage(named: artworkName) != nil {
+            if let artwork = CrossingArtwork.image(named: artworkName) {
                 // Кадр задаётся явной геометрией, а не `maxWidth/maxHeight:
                 // .infinity`. С бесконечными границами `scaledToFill` считает
                 // масштаб по предложенному размеру раньше, чем известен кадр, и
                 // обрезка выходит несимметричной: герой уезжает вбок от
                 // UI-колонки, которая стоит строго по центру.
                 GeometryReader { proxy in
-                    Image(artworkName)
+                    Image(uiImage: artwork)
                         .resizable()
                         .scaledToFill()
                         .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)

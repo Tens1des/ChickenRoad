@@ -12,6 +12,21 @@ final class ShellSystemBridge: NSObject, UIApplicationDelegate, UNUserNotificati
         category: "SystemBridge"
     )
 
+    /// Окно красится чёрным один раз на старте.
+    ///
+    /// Во время системного перехода ориентации кадр приложения на мгновение не
+    /// покрывает экран целиком, и в этом просвете видно фон окна — по умолчанию
+    /// белый. На видео с прогона он выходил белым клином поперёк экрана.
+    @MainActor
+    private func paintWindowBackground() {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows where window.windowLevel == .normal {
+                window.backgroundColor = .black
+            }
+        }
+    }
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -19,6 +34,8 @@ final class ShellSystemBridge: NSObject, UIApplicationDelegate, UNUserNotificati
         UNUserNotificationCenter.current().delegate = self
 
         MainActor.assumeIsolated {
+            paintWindowBackground()
+
             let shell = AppShellFacade.shared
             shell.bootstrap(application: application, launchOptions: launchOptions)
 

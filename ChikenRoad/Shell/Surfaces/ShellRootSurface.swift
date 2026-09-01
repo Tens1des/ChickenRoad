@@ -45,6 +45,10 @@ struct ShellRootSurface<GameContent: View>: View {
             }
         }
         .task {
+            // Оба фоновых мастера греются до первого поворота: холодная
+            // раскодировка полноэкранной картинки внутри системного перехода
+            // ориентации подвешивает главный поток.
+            CrossingArtwork.warmUp()
             shell.start()
         }
         .onChange(of: shell.destination) {
