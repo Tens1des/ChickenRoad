@@ -173,52 +173,38 @@ final class ExchangeCoordinator {
                 await context.presentPersistentWeb(url)
 
             case .declined:
-                // Отказ на первом решении — native навсегда. Отказ на уже
-                // залоченном web режим не трогает.
+                // Код ответа здесь не разбирается намеренно.
                 //
-                // Но решением считается только осмысленный ответ: честный 200 с
-                // `ok:false`. Не-200 — это сбой сервера или инфраструктуры, а не
-                // вердикт про органику, и фиксировать по нему режим навсегда
-                // нельзя: один 502 или 429 уводил установку в игру необратимо.
-                // Прежняя логика была вдобавок противоречива — битое тело при
-                // честном 200 оставалось повторяемым, а чистый 502 запечатывал.
-                guard receipt.statusCode == 200 else {
-                    showFailure(
-                        message: "The configuration service is temporarily unavailable. Please try again.",
-                        fallback: fallback
-                    )
-                    return
-                }
-
-                if context.vault.installMode == .undecided {
-                    // Отказ становится решением только тогда, когда SDK успел
-                    // ответить. Отказ на неприехавшей атрибуции — наш промах, а
-                    // не ответ сервера про органику.
-                    if attributionSettled {
-                        context.vault.sealNative()
-                        if context.oneShotPushLink == nil { context.show(.game) }
-                    } else {
-                        // Режим не фиксируем и показываем игру как временное
-                        // содержимое. Ждать следующего запуска нельзя: установка
-                        // по OneLink просидела бы в игре всю сессию. Переспросим
-                        // сами, как только SDK ответит.
-                        if context.oneShotPushLink == nil { context.show(.game) }
-                        askAgainWhenAttributionArrives()
-                    }
-                } else {
-                    showFailure(message: "The latest link is temporarily unavailable.", fallback: fallback)
-                }
+                // ТЗ (§2.3) отдаёт отрицательный ответ именно как `404` с телом
+                // `{"ok": false, "message": "No data"}`, и там же прямым текстом:
+                // ошибка запроса к эндпоинту = отрицательный ответ. Боевой
+                // `henpath.com/config.php` так и отвечает.
+                //
+                // Прежняя проверка `statusCode == 200` считала этот штатный отказ
+                // сбоем инфраструктуры и держала установку на экране ошибки —
+                // ровно то, что тестировщик увидел вместо фантика.
+                handleDeclined(fallback: fallback, attributionSettled: attributionSettled)
             }
         } catch let exchangeError as LinkExchangeError {
             markTokenDelivered(pushToken, if: exchangeError.answeredOverHTTP)
-            let message: String
             switch exchangeError {
+            case .unreadableBody, .unusableGrant:
+                // Сервер ответил по HTTP, но годной ссылки в ответе нет. По ТЗ
+                // §2.4 это такой же отрицательный ответ, как честный `ok:false`:
+                // чинить чужое тело приложению нечем, а вечный экран ошибки
+                // отбирает у установки и витрину, и игру.
+                handleDeclined(fallback: fallback, attributionSettled: attributionSettled)
             case .transport:
-                message = "No internet connection. Check your connection and try again."
+                showFailure(
+                    message: "No internet connection. Check your connection and try again.",
+                    fallback: fallback
+                )
             default:
-                message = "The configuration service returned an invalid response. Please try again."
+                showFailure(
+                    message: "The configuration service returned an invalid response. Please try again.",
+                    fallback: fallback
+                )
             }
-            showFailure(message: message, fallback: fallback)
         } catch {
             showFailure(message: "The service is temporarily unavailable. Please try again.", fallback: fallback)
         }
@@ -231,6 +217,34 @@ final class ExchangeCoordinator {
            newestToken != pushToken,
            newestToken != context.vault.deliveredPushToken {
             schedule(forceRefresh: true)
+        }
+    }
+
+    /// Отрицательный ответ сервера.
+    ///
+    /// Первое решение по ТЗ необратимо: «запрос неуспешен и `url` ранее не был
+    /// получен — запустить игру и больше не обращаться к конфигу в рамках этой
+    /// установки». На уже залоченном web режим не трогается вовсе.
+    private func handleDeclined(fallback: LinkGrant?, attributionSettled: Bool) {
+        guard let context else { return }
+
+        guard context.vault.installMode == .undecided else {
+            showFailure(message: "The latest link is temporarily unavailable.", fallback: fallback)
+            return
+        }
+
+        // Отказ становится решением только тогда, когда SDK успел ответить.
+        // Отказ на неприехавшей атрибуции — наш промах, а не ответ сервера про
+        // органику.
+        if attributionSettled {
+            context.vault.sealNative()
+            if context.oneShotPushLink == nil { context.show(.game) }
+        } else {
+            // Режим не фиксируем и показываем игру как временное содержимое.
+            // Ждать следующего запуска нельзя: установка по OneLink просидела бы
+            // в игре всю сессию. Переспросим сами, как только SDK ответит.
+            if context.oneShotPushLink == nil { context.show(.game) }
+            askAgainWhenAttributionArrives()
         }
     }
 
