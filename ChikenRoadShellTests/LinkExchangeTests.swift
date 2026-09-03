@@ -99,6 +99,26 @@ final class LinkExchangeTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+
+    /// Негодный `expires` не отменяет выдачу: по ТЗ положительный ответ со
+    /// ссылкой — это витрина. Грант приходит просроченным, поэтому следующий
+    /// запуск сам сходит за свежей ссылкой.
+    func testLinkSurvivesAnUnusableExpiry() async throws {
+        for broken in [Any?.none, 0, -1, "soon"] as [Any?] {
+            var payload: [String: Any] = ["ok": true, "url": "https://example.com/a?b=c"]
+            if let broken { payload["expires"] = broken }
+            URLProtocolStub.configure(statusCode: 200, json: payload)
+
+            let receipt = try await sut.ask(endpoint: endpoint, envelope: [:])
+
+            guard case .granted(let grant) = receipt.verdict else {
+                return XCTFail("Expected a granted verdict for expires=\(String(describing: broken))")
+            }
+            XCTAssertEqual(grant.rawLink, "https://example.com/a?b=c")
+            XCTAssertEqual(grant.expiresEpoch, 0)
+            XCTAssertTrue(grant.hasExpired())
+        }
+    }
 }
 
 private nonisolated final class URLProtocolStub: URLProtocol, @unchecked Sendable {

@@ -71,11 +71,23 @@ final class LinkExchange: @unchecked Sendable {
               let parsed = URL(string: rawLink),
               let linkScheme = parsed.scheme?.lowercased(),
               linkScheme == "http" || linkScheme == "https",
-              parsed.host != nil,
-              let expires = Self.epoch(fields["expires"]),
-              expires.isFinite,
-              expires > 0 else {
+              parsed.host != nil else {
             throw LinkExchangeError.unusableGrant(statusCode: http.statusCode)
+        }
+
+        // Срок годности не решает, выдана ссылка или нет.
+        //
+        // По ТЗ §1.1 положительный ответ со ссылкой — это витрина, и негодный
+        // `expires` (строка, ноль, отсутствует) отменить выдачу не может. Такой
+        // грант сохраняется просроченным: витрина открывается сейчас, а
+        // следующий запуск идёт за свежей ссылкой — ровно ветка «истёк» из §1.2.
+        //
+        // Раньше он летел в `unusableGrant`, а с тех пор как не-200 перестал
+        // разбираться отдельно, оттуда — в `sealNative()`. То есть выданная
+        // сервером ссылка навсегда теряла установку в игре.
+        var expires: TimeInterval = 0
+        if let stamped = Self.epoch(fields["expires"]), stamped.isFinite, stamped > 0 {
+            expires = stamped
         }
 
         return ExchangeReceipt(
